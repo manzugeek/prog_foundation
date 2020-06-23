@@ -1,9 +1,16 @@
 
-require 'pry'
+equire 'pry'
+
+WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # rows
+                [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # columns
+                [[1, 5, 9], [3, 5, 7]]              # diagonals
+
 
 INITIAL_MARKER = ' '
 PLAYER_MARKER = 'X'
 COMPUTER_MARKER = 'O'
+
+score = { player_score: 0, computer_score: 0}
 
 def prompt(message)
   puts "=> #{message}"
@@ -47,20 +54,46 @@ def joinor(arr, delimiter=', ', word='or')
   end
 end
 
+def find_at_risk_square(line, board, marker)
+  if board.values_at(*line).count(marker) == 2
+    board.select{ |k, v| line.include?(k) && v == INITIAL_MARKER}.keys.first
+  else
+    nil
+  end
+end
+
 def player_place_piece!(brd)
   square = ''
   loop do
     prompt "Choose a position to place a piece: #{joinor(empty_squares(brd))}"
-    #prompt "Choose a square (#{empty_squares(brd).join(', ')}):"
     square = gets.chomp.to_i
     break if empty_squares(brd).include?(square)
       prompt "Sorry, that's not a valid choice."
     end
     brd[square] = PLAYER_MARKER
-  end
+end
 
 def computer_places_piece!(brd)
-  square = empty_squares(brd).sample
+  square = nil
+
+  # defense first
+  WINNING_LINES.each do |line|
+    square = find_at_risk_square(line, brd, PLAYER_MARKER)
+    break if  square
+  end
+
+  # offense
+  if !square
+    WINNING_LINES.each do |line|
+      square = find_at_risk_square(line, brd, COMPUTER_MARKER)
+      break if  square
+    end
+  end
+  # just pick s square
+  if !square
+    square = empty_squares(brd).sample
+  end
+
   brd[square] = COMPUTER_MARKER
 end
 
@@ -73,11 +106,7 @@ def someone_won?(brd)
 end
 
 def detect_winner(brd)
-  winning_lines = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # rows
-                  [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # columns
-                  [[1, 5, 9], [3, 5, 7]]              # diagonals
-
-  winning_lines.each do |line|
+  WINNING_LINES.each do |line|
     if brd[line[0]] == PLAYER_MARKER &&
        brd[line[1]] == PLAYER_MARKER &&
        brd[line[2]] == PLAYER_MARKER
@@ -91,8 +120,6 @@ def detect_winner(brd)
   end
   nil
 end
-
-score = { player_score: 0, computer_score: 0}
 
 def display_score(score)
   prompt "Player score: #{score[:player_score]} | Computer score: #{score[:computer_score]}"
@@ -129,7 +156,7 @@ end
 
 def match_reset(score)
   score[:player_score] = 0 && score[:computer_score] = 0
-  prompt "Match re-set if wanna play again..."
+  prompt "Match re-set if wanna play again"
 end
 
 # MAIN LOOP .....

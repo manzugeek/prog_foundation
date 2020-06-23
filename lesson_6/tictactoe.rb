@@ -1,3 +1,6 @@
+
+require 'pry'
+
 INITIAL_MARKER = ' '
 PLAYER_MARKER = 'X'
 COMPUTER_MARKER = 'O'
@@ -33,10 +36,22 @@ def empty_squares(brd)
   brd.keys.select { |num| brd[num] == INITIAL_MARKER}
 end
 
+def joinor(arr, delimiter=', ', word='or')
+  case arr.size
+  when 0 then ''
+  when 1 then arr.first
+  when 2 then arr.join(" #{word} ")
+  else
+    arr[-1] = "#{word}  #{arr.last}"
+    arr.join(delimiter)
+  end
+end
+
 def player_place_piece!(brd)
   square = ''
   loop do
-    prompt "Choose a square (#{empty_squares(brd).join(', ')}):"
+    prompt "Choose a position to place a piece: #{joinor(empty_squares(brd))}"
+    #prompt "Choose a square (#{empty_squares(brd).join(', ')}):"
     square = gets.chomp.to_i
     break if empty_squares(brd).include?(square)
       prompt "Sorry, that's not a valid choice."
@@ -77,10 +92,51 @@ def detect_winner(brd)
   nil
 end
 
+score = { player_score: 0, computer_score: 0}
 
+def display_score(score)
+  prompt "Player score: #{score[:player_score]} | Computer score: #{score[:computer_score]}"
+end
+
+def update_score(brd, score)
+  if detect_winner(brd) == 'Player'
+    score[:player_score] += 1
+  elsif detect_winner(brd) == 'Computer'
+    score[:computer_score] += 1
+  end
+end
+
+def display_round_winner(brd, score)
+  if someone_won?(brd)
+    prompt "#{detect_winner(brd)} won!"
+  else
+    prompt "it's a tie"
+  end
+  display_score(score)
+end
+
+def match_over?(score)
+  score[:player_score] == 3 || score[:computer_score] == 3
+end
+
+def display_match_winner(score)
+  if score[:player_score] == 3
+    prompt "Player is the Grand Winner!"
+  else
+    prompt "Computer is the Grand Winner!"
+  end
+end
+
+def match_reset(score)
+  score[:player_score] = 0 && score[:computer_score] = 0
+  prompt "Match re-set if wanna play again..."
+end
+
+# MAIN LOOP .....
 loop do
   board = initialize_board
 
+# PLAYERS INPUT LOOP
   loop do
     display_board(board)
 
@@ -93,11 +149,13 @@ loop do
 
   display_board(board)
 
-  if someone_won?(board)
-    prompt "#{detect_winner(board)} won!"
-  else
-  prompt "it's a tie"
-  end
+  update_score(board, score)
+  display_round_winner(board, score)
+
+  if match_over?(score)
+  display_match_winner(score)
+  match_reset(score)
+end
 
   prompt "Play again? (y or n)"
   answer = gets.chomp

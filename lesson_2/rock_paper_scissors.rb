@@ -1,4 +1,4 @@
-VALID_CHOICES = ['rock', 'paper', 'scissors']
+VALID_CHOICES = %w(rock paper scissors lizard spock)
 
 def test_method
   prompt('test message')
@@ -8,12 +8,14 @@ def prompt(message)
   Kernel.puts("=> #{message}")
 end
 
-test_method
+# test_method
 
 def win?(first, second)
   (first == 'rock' && second == 'scissors') ||
     (first == 'paper' && second == 'rock') ||
-    (first == 'scissors' && second == 'paper')
+    (first == 'scissors' && second == 'paper') ||
+    (first == 'lizard' && second == 'spock') ||
+    (first == 'spock' && second == 'lizard')
 end
 
 def display_results(player, computer)
@@ -30,6 +32,7 @@ loop do # Main execution loop
   choice = ''
   loop do
     prompt("Choose one: #{VALID_CHOICES.join(', ')}")
+
     choice = Kernel.gets().chomp()
 
     if VALID_CHOICES.include?(choice)
